@@ -68,12 +68,20 @@ class FullscreenActivity : AppCompatActivity() {
         }.timeInMillis
 
         //set the intent
+//        val intent = Intent(applicationContext, WeatherActivity::class.java)
+//        intent.action = "com.example.weatherreport"
+//        intent.putExtra("ShowWeatherLength",length)
+//        intent.putExtra("ShowWeatherHour",hour)
+//        intent.putExtra("ShowWeatherMinutes",minutes)
+//        val pintent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
         val intent = Intent(applicationContext, BroadCastReceiver::class.java)
         intent.action = "com.example.weatherreport"
         intent.putExtra("ShowWeatherLength",length)
         intent.putExtra("ShowWeatherHour",hour)
         intent.putExtra("ShowWeatherMinutes",minutes)
         val pintent= PendingIntent.getBroadcast(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
         am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,tomorrowmorning, pintent)
         //am.setRepeating(AlarmManager.RTC_WAKEUP,tomorrowmorning,AlarmManager.INTERVAL_DAY, pintent)
     }

@@ -24,10 +24,12 @@
             android:exported="false"
             android:label="Weather Report"
             android:theme="@style/Theme.WeatherReport.Fullscreen">
+            <intent-filter>
+                <action android:name="com.example.weatherreport" />
+            </intent-filter>
         </activity>
         <receiver android:name=".BroadCastReceiver" android:enabled="true" android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.SCREEN_OFF" />
                 <action android:name="com.example.weatherreport" />
             </intent-filter>
         </receiver>
