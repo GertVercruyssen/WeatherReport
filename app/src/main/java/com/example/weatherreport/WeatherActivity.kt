@@ -6,13 +6,64 @@ import android.app.KeyguardManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.*
+import android.text.format.DateFormat
 import android.view.*
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import com.example.weatherreport.databinding.ActivityWeatherBinding
+import com.github.matteobattilana.weather.PrecipType
+import com.github.matteobattilana.weather.WeatherView
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
+import com.google.gson.Gson
+import kotlinx.coroutines.*
+import java.lang.Runnable
+import java.net.URL
 import java.util.*
+import javax.net.ssl.HttpsURLConnection
+import kotlin.collections.ArrayList
 
+
+sealed class Result<out R> {
+    data class Success<out T>(val data: T) : Result<T>()
+    data class Error(val exception: Exception) : Result<Nothing>()
+}
+
+data class DisplayData(
+    val todayWeatherDate: Long,
+    val todayWeatherType: weatherData,
+    val todayTemperature: Float,
+    val todayRainchances: List<Pair<Float, Long>>,
+    val next5Days: List<weatherData>
+)data class RequestData (
+    val list: List<ForecastData>
+)
+data class mainData(
+    val temp: Float,
+    val feelslike: Float,
+    val grndlvl: Float,
+    val humidity: Float
+)
+data class weatherData(
+    val id: String,
+    val main: String,
+    val description: String,
+    val icon: String
+)
+data class windData(
+    val speed: Float
+)
+data class ForecastData(
+    val dt: Long,
+    val main: mainData,
+    val weather: List<weatherData>,
+    val wind: windData,
+    val pop: Float
+)
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -21,9 +72,13 @@ import java.util.*
 class WeatherActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWeatherBinding
-    private lateinit var fullscreenContent: RelativeLayout
+    private lateinit var fullscreenContent: ConstraintLayout
     private lateinit var fullscreenContentControls: LinearLayout
+    private lateinit var weatherView: WeatherView
     private val hideHandler = Handler(Looper.myLooper()!!)
+    //35.681765, 139.664546 thuis
+    private val urldaily = "https://api.openweathermap.org/data/2.5/weather?lat=35.681&lon=139.664&appid=2ddcbe80f116f1a66b67526c132f6322&units=metric"
+    private val url5days = "https://api.openweathermap.org/data/2.5/forecast?lat=35.681&lon=139.664&appid=2ddcbe80f116f1a66b67526c132f6322&units=metric"
 
     @SuppressLint("InlinedApi")
     private val hidePart2Runnable = Runnable {
@@ -81,6 +136,7 @@ class WeatherActivity : AppCompatActivity() {
         fullscreenContent = binding.fullscreenContent
         fullscreenContent.setOnClickListener { toggle() }
         fullscreenContentControls = binding.fullscreenContentControls
+        weatherView = binding.weatherView
         hide()
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
@@ -124,14 +180,126 @@ class WeatherActivity : AppCompatActivity() {
         //am.setRepeating(AlarmManager.RTC_WAKEUP,tomorrowmorning,AlarmManager.INTERVAL_DAY, pintent)
     }
 
-    private fun displayWeather(length: Int) {
-        //Get the weatherData (Async)
+    private fun displayWeather(length: Int) = runBlocking{
+        val job = async { getWeatherData() }
 
-        //wakeUpAndUnlock(length)
+        wakeUpAndUnlock(length)
 
-        //Get the weatherData (finish)
+        val result = job.await()
 
-        //Set the UI and fill in with weatherdata
+        setupDisplay(result)
+    }
+
+    private fun setupDisplay(weather: Result<DisplayData>) {
+        when(weather) {
+            is Result.Error -> {
+                binding.outputText.text = weather.exception.message
+            }
+            is Result.Success -> {
+                showWeatherData(weather.data)
+            }
+        }
+    }
+
+    private fun showWeatherData(data: DisplayData) {
+        binding.outputText.isVisible=false //hide error output
+
+        when(data.todayWeatherType.main) {
+            "Rain"->weatherView.setWeatherData(PrecipType.RAIN)
+            "Snow"->weatherView.setWeatherData(PrecipType.SNOW)
+            "Clear"->weatherView.setWeatherData(PrecipType.CLEAR)
+            else->weatherView.visibility = View.INVISIBLE
+        }
+        binding.dateofweather.text = getDate(data.todayWeatherDate)
+        val icon = when(data.todayWeatherType.icon) {
+            "01d" -> R.drawable._01d
+            "01n" -> R.drawable._01n
+            "02d" -> R.drawable._02d
+            "02n" -> R.drawable._02n
+            "03d" -> R.drawable._03d
+            "03n" -> R.drawable._03n
+            "04d" -> R.drawable._04d
+            "04n" -> R.drawable._04n
+            "09d" -> R.drawable._09d
+            "09n" -> R.drawable._09n
+            "10d" -> R.drawable._10d
+            "10n" -> R.drawable._10n
+            "11d" -> R.drawable._11d
+            "11n" -> R.drawable._11n
+            "13d" -> R.drawable._13d
+            "13n" -> R.drawable._13n
+            "50d" -> R.drawable._50d
+            "50n" -> R.drawable._50n
+            else-> R.drawable._50n
+        }
+        binding.icon.setImageResource(icon)
+
+        binding.temp.text = String.format("%.1f", data.todayTemperature)+"°C"
+
+        doBarChart(data.todayRainchances)
+    }
+
+    private fun doBarChart(inputdata: List<Pair<Float,Long>>) {
+        val entries: ArrayList<BarEntry> = ArrayList()
+
+        //input data
+        for (i in inputdata.indices) {
+            entries.add(BarEntry(inputdata[i].first, i))
+        }
+        val barDataSet = BarDataSet(entries, "rain chance")
+        val allBarDataSets = ArrayList<IBarDataSet>()
+        allBarDataSets.add(barDataSet)
+
+        val data = BarData(listOf(), allBarDataSets)
+        binding.chart1.data = data
+        binding.chart1.invalidate()
+
+        binding.chart1.xAxis.values = inputdata.map { getDate(it.second) }.toMutableList()
+    }
+    private suspend fun getWeatherData(): Result<DisplayData> {
+        return try {
+            Result.Success(
+                withContext(Dispatchers.IO) { getWeatherDatafromAPI() }
+            )
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    private fun getWeatherDatafromAPI(): DisplayData {
+        val url =
+            URL(url5days)
+        val connection = url.openConnection() as HttpsURLConnection
+
+        if (connection.responseCode == 200) {
+            val inputStream = connection.inputStream
+            val inputStreamReader = inputStream.reader(charset("UTF-8"))
+            val receivedData = Gson().fromJson(inputStreamReader, RequestData::class.java)
+            inputStreamReader.close()
+            inputStream.close()
+            return processData(receivedData)
+        } else {
+            throw Exception("Could not connect to the API")
+        }
+    }
+
+    private fun processData(requestData: RequestData): DisplayData {
+        val rainchances = mutableListOf<Pair<Float, Long>>()
+        for (i in 0..5) {
+            rainchances.add(requestData.list[i].pop to requestData.list[i].dt)
+        }
+        val incommingWeather = when (requestData.list[0].dt < (System.currentTimeMillis()*1000)+5000) {
+            true -> requestData.list[1]
+            false -> requestData.list[0]
+        }
+
+        return DisplayData(
+            incommingWeather.dt,
+            incommingWeather.weather[0],
+            incommingWeather.main.temp,
+            rainchances.toList(),
+            requestData.list.map { it.weather[0] }
+        )
     }
 
     private fun wakeUpAndUnlock(length: Int) {
@@ -212,6 +380,14 @@ class WeatherActivity : AppCompatActivity() {
     private fun delayedHide(delayMillis: Int) {
         hideHandler.removeCallbacks(hideRunnable)
         hideHandler.postDelayed(hideRunnable, delayMillis.toLong())
+    }
+
+    //Takes timestamp in seconds NOT MILLIS
+    fun getDate(timestamp: Long) :String {
+        val calendar = Calendar.getInstance(Locale.ENGLISH)
+        calendar.timeInMillis = timestamp
+        val date = DateFormat.format("HH:MM dd-MM-yyyy",calendar).toString()
+        return date
     }
 
     companion object {

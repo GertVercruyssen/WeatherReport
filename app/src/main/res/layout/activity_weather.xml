@@ -3,40 +3,91 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#a7def2"
     android:theme="@style/ThemeOverlay.WeatherReport.FullscreenContainer"
     tools:context=".WeatherActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
-    <RelativeLayout
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/fullscreen_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
 
+        <com.github.matteobattilana.weather.WeatherView
+            android:id="@+id/weather_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
+            android:id="@+id/outputText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Placeholder for today's weather info"
-            android:layout_centerInParent="true"
+            android:maxLines="10"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             android:textColor="@color/black"
             />
 
-    </RelativeLayout>
-<!--    <TextView-->
-<!--        android:id="@+id/fullscreen_content"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:gravity="center"-->
-<!--        android:keepScreenOn="true"-->
-<!--        android:text="Weather Info"-->
-<!--        android:textColor="?attr/fullscreenTextColor"-->
-<!--        android:textSize="50sp"-->
-<!--        android:textStyle="bold" />-->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/dateofweather"
+            android:text="placeholder date"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintVertical_bias="0"
+            />
 
-    <!-- This FrameLayout insets its children based on system windows using
-         android:fitsSystemWindows. -->
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/icon"
+            android:src="@drawable/_01d"
+            app:layout_constraintBottom_toTopOf="@id/chart1"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/temp"
+            app:layout_constraintTop_toBottomOf="@id/dateofweather"
+        />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/temp"
+            android:textSize="40sp"
+            android:text="99C"
+            app:layout_constraintBottom_toTopOf="@id/chart1"
+            app:layout_constraintLeft_toRightOf="@id/icon"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dateofweather"
+            />
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/chart1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/icon"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/icon"
+            />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
