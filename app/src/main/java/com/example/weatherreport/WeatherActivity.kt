@@ -6,7 +6,6 @@ import android.app.KeyguardManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.*
-import android.text.format.DateFormat
 import android.view.*
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -15,17 +14,13 @@ import androidx.core.view.isVisible
 import com.example.weatherreport.databinding.ActivityWeatherBinding
 import com.github.matteobattilana.weather.PrecipType
 import com.github.matteobattilana.weather.WeatherView
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.*
 import java.lang.Runnable
 import java.net.URL
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
-import kotlin.collections.ArrayList
 
 
 sealed class Result<out R> {
@@ -37,14 +32,19 @@ data class DisplayData(
     val todayWeatherDate: Long,
     val todayWeatherType: weatherData,
     val todayTemperature: Float,
+    val todayHumid: Float,
+    val todayPressure: Float,
+    val todayFeelTemperature: Float,
     val todayRainchances: List<Pair<Float, Long>>,
-    val next5Days: List<weatherData>
+    val nextDays: List<ForecastData>
 )data class RequestData (
     val list: List<ForecastData>
 )
 data class mainData(
     val temp: Float,
+    @SerializedName(value = "feels_like")
     val feelslike: Float,
+    @SerializedName(value = "grnd_level")
     val grndlvl: Float,
     val humidity: Float
 )
@@ -64,6 +64,13 @@ data class ForecastData(
     val wind: windData,
     val pop: Float
 )
+
+//Takes timestamp in seconds NOT MILLIS
+fun Long.toDate(format: String = "yyyy-MM-dd HH:mm:ss"): String {
+    val sdf = java.text.SimpleDateFormat(format)
+    val time: Date = Date(this*1000)
+    return sdf.format(time)
+}
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -210,8 +217,9 @@ class WeatherActivity : AppCompatActivity() {
             "Clear"->weatherView.setWeatherData(PrecipType.CLEAR)
             else->weatherView.visibility = View.INVISIBLE
         }
-        binding.dateofweather.text = getDate(data.todayWeatherDate)
-        val icon = when(data.todayWeatherType.icon) {
+        binding.dateofweather.text = data.todayWeatherDate.toDate("yyyy-MM-dd HH:mm:ss")
+
+        val icon = when(data.todayWeatherType.icon.replace('n','d')) {
             "01d" -> R.drawable._01d
             "01n" -> R.drawable._01n
             "02d" -> R.drawable._02d
@@ -236,26 +244,19 @@ class WeatherActivity : AppCompatActivity() {
 
         binding.temp.text = String.format("%.1f", data.todayTemperature)+"°C"
 
-        doBarChart(data.todayRainchances)
+        binding.chart1.input = data.todayRainchances
+        binding.chart1.invalidate() //force redraw
+
+        binding.feeltemp.text = String.format("%.1f", data.todayFeelTemperature)+"°C"
+
+        binding.description.text = data.todayWeatherType.description
+
+        binding.tempgraph.input = data.nextDays.map { it.main.temp }
+
+        binding.humid.text = "Humidity: "+ String.format("%.1f", data.todayHumid)+"%"
+        binding.pressure.text = "Pressure: "+ String.format("%.1f", data.todayPressure)
     }
 
-    private fun doBarChart(inputdata: List<Pair<Float,Long>>) {
-        val entries: ArrayList<BarEntry> = ArrayList()
-
-        //input data
-        for (i in inputdata.indices) {
-            entries.add(BarEntry(inputdata[i].first, i))
-        }
-        val barDataSet = BarDataSet(entries, "rain chance")
-        val allBarDataSets = ArrayList<IBarDataSet>()
-        allBarDataSets.add(barDataSet)
-
-        val data = BarData(listOf(), allBarDataSets)
-        binding.chart1.data = data
-        binding.chart1.invalidate()
-
-        binding.chart1.xAxis.values = inputdata.map { getDate(it.second) }.toMutableList()
-    }
     private suspend fun getWeatherData(): Result<DisplayData> {
         return try {
             Result.Success(
@@ -285,10 +286,11 @@ class WeatherActivity : AppCompatActivity() {
 
     private fun processData(requestData: RequestData): DisplayData {
         val rainchances = mutableListOf<Pair<Float, Long>>()
-        for (i in 0..5) {
+        for (i in 0..15) {
             rainchances.add(requestData.list[i].pop to requestData.list[i].dt)
         }
-        val incommingWeather = when (requestData.list[0].dt < (System.currentTimeMillis()*1000)+5000) {
+        val hour = requestData.list[0].dt.toDate("HH").toInt()
+        val incommingWeather = when (hour<13) {
             true -> requestData.list[1]
             false -> requestData.list[0]
         }
@@ -297,8 +299,11 @@ class WeatherActivity : AppCompatActivity() {
             incommingWeather.dt,
             incommingWeather.weather[0],
             incommingWeather.main.temp,
+            incommingWeather.main.humidity,
+            incommingWeather.main.grndlvl,
+            incommingWeather.main.feelslike,
             rainchances.toList(),
-            requestData.list.map { it.weather[0] }
+            requestData.list
         )
     }
 
@@ -380,14 +385,6 @@ class WeatherActivity : AppCompatActivity() {
     private fun delayedHide(delayMillis: Int) {
         hideHandler.removeCallbacks(hideRunnable)
         hideHandler.postDelayed(hideRunnable, delayMillis.toLong())
-    }
-
-    //Takes timestamp in seconds NOT MILLIS
-    fun getDate(timestamp: Long) :String {
-        val calendar = Calendar.getInstance(Locale.ENGLISH)
-        calendar.timeInMillis = timestamp
-        val date = DateFormat.format("HH:MM dd-MM-yyyy",calendar).toString()
-        return date
     }
 
     companion object {

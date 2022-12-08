@@ -62,7 +62,7 @@ class FullscreenActivity : AppCompatActivity() {
         val am= applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
         //tomorrow morning
         val tomorrowmorning = GregorianCalendar().apply {
-            //add(Calendar.DATE, 1)
+            add(Calendar.DATE, 1)
             set(Calendar.HOUR_OF_DAY,hour)
             set(Calendar.MINUTE, minutes)
         }.timeInMillis
