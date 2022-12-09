@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="#d7f7f4"
+    android:background="#f7f3f0"
     android:theme="@style/ThemeOverlay.WeatherReport.FullscreenContainer"
     tools:context=".WeatherActivity">
 

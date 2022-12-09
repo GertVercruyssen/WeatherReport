@@ -220,25 +220,25 @@ class WeatherActivity : AppCompatActivity() {
         binding.dateofweather.text = data.todayWeatherDate.toDate("yyyy-MM-dd HH:mm:ss")
 
         val icon = when(data.todayWeatherType.icon.replace('n','d')) {
-            "01d" -> R.drawable._01d
-            "01n" -> R.drawable._01n
-            "02d" -> R.drawable._02d
-            "02n" -> R.drawable._02n
-            "03d" -> R.drawable._03d
-            "03n" -> R.drawable._03n
-            "04d" -> R.drawable._04d
-            "04n" -> R.drawable._04n
-            "09d" -> R.drawable._09d
-            "09n" -> R.drawable._09n
-            "10d" -> R.drawable._10d
-            "10n" -> R.drawable._10n
-            "11d" -> R.drawable._11d
-            "11n" -> R.drawable._11n
-            "13d" -> R.drawable._13d
-            "13n" -> R.drawable._13n
-            "50d" -> R.drawable._50d
-            "50n" -> R.drawable._50n
-            else-> R.drawable._50n
+            "01d" -> R.drawable.c1d
+            "01n" -> R.drawable.c1d
+            "02d" -> R.drawable.c2d
+            "02n" -> R.drawable.c2d
+            "03d" -> R.drawable.c3d
+            "03n" -> R.drawable.c3d
+            "04d" -> R.drawable.c4d
+            "04n" -> R.drawable.c4d
+            "09d" -> R.drawable.c9d
+            "09n" -> R.drawable.c9d
+            "10d" -> R.drawable.c10d
+            "10n" -> R.drawable.c10d
+            "11d" -> R.drawable.c11d
+            "11n" -> R.drawable.c11d
+            "13d" -> R.drawable.c13d
+            "13n" -> R.drawable.c13d
+            "50d" -> R.drawable.c50d
+            "50n" -> R.drawable.c50d
+            else-> R.drawable.c50d
         }
         binding.icon.setImageResource(icon)
 
@@ -290,7 +290,7 @@ class WeatherActivity : AppCompatActivity() {
             rainchances.add(requestData.list[i].pop to requestData.list[i].dt)
         }
         val hour = requestData.list[0].dt.toDate("HH").toInt()
-        val incommingWeather = when (hour<13) {
+        val incommingWeather = when (hour<11) {
             true -> requestData.list[1]
             false -> requestData.list[0]
         }
