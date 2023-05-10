@@ -155,6 +155,9 @@ class WeatherActivity : AppCompatActivity() {
         val hour = intent.getIntExtra("ShowWeatherMinutes",20)
         setAlarm(hour,minutes, length)
         displayWeather(length)
+
+        val handler = Handler()
+        handler.postDelayed({ finish() }, length.toLong()*60*1000)
     }
 
     private fun setAlarm(hour: Int, minutes: Int, length: Int) {
