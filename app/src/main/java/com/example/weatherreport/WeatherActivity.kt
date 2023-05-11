@@ -82,6 +82,8 @@ class WeatherActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWeatherBinding
     private lateinit var fullscreenContent: ConstraintLayout
     private lateinit var fullscreenContentControls: LinearLayout
+    private var screen: Int = 10
+    private var delay: Int = 5
     private val hideHandler = Handler(Looper.myLooper()!!)
     //35.681765, 139.664546 thuis
     private val urldaily = "https://api.openweathermap.org/data/2.5/weather?lat=35.681&lon=139.664&appid=2ddcbe80f116f1a66b67526c132f6322&units=metric"
@@ -149,8 +151,8 @@ class WeatherActivity : AppCompatActivity() {
         // while interacting with the UI.
         binding.dummyButton.setOnTouchListener(delayHideTouchListener)
 
-        val screen = intent.getIntExtra("ShowScreenLength",10)
-        val delay = intent.getIntExtra("ShowDelay",5)
+        screen = intent.getIntExtra("ShowScreenLength",10)
+        delay = intent.getIntExtra("ShowDelay",5)
         setAlarm(screen, delay)
         displayWeather(screen)
 
@@ -161,6 +163,10 @@ class WeatherActivity : AppCompatActivity() {
         handler.postDelayed({ finish() }, 1000)
     }
 
+    override fun onResume() {
+        super.onResume()
+        displayWeather(screen)
+    }
     private fun setAlarm(screen: Int, delay: Int) {
         //Set alarm for next time
         AlarmManager.RTC_WAKEUP

@@ -35,7 +35,7 @@ class FullscreenActivity : AppCompatActivity() {
         binding.screenvalue.value = sharedPref.getInt("screen", 10)
         binding.delayvalue.minValue=0
         binding.delayvalue.maxValue=180
-        binding.delayvalue.value = sharedPref.getInt("delay", 10)
+        binding.delayvalue.value = sharedPref.getInt("delay", 5)
 
         binding.okButton.setOnClickListener{
             saveSettings(binding.screenvalue.value, binding.delayvalue.value)
