@@ -3,6 +3,7 @@ package com.example.weatherreport
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.KeyguardManager
+import android.app.KeyguardManager.KeyguardLock
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.*
@@ -12,12 +13,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.example.weatherreport.databinding.ActivityWeatherBinding
-import com.github.matteobattilana.weather.PrecipType
-import com.github.matteobattilana.weather.WeatherView
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.*
 import java.lang.Runnable
+import java.lang.Thread.sleep
 import java.net.URL
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
@@ -78,10 +78,10 @@ fun Long.toDate(format: String = "yyyy-MM-dd HH:mm:ss"): String {
  */
 class WeatherActivity : AppCompatActivity() {
 
+    private lateinit var keyguardLock: KeyguardLock
     private lateinit var binding: ActivityWeatherBinding
     private lateinit var fullscreenContent: ConstraintLayout
     private lateinit var fullscreenContentControls: LinearLayout
-    private lateinit var weatherView: WeatherView
     private val hideHandler = Handler(Looper.myLooper()!!)
     //35.681765, 139.664546 thuis
     private val urldaily = "https://api.openweathermap.org/data/2.5/weather?lat=35.681&lon=139.664&appid=2ddcbe80f116f1a66b67526c132f6322&units=metric"
@@ -143,50 +143,41 @@ class WeatherActivity : AppCompatActivity() {
         fullscreenContent = binding.fullscreenContent
         fullscreenContent.setOnClickListener { toggle() }
         fullscreenContentControls = binding.fullscreenContentControls
-        weatherView = binding.weatherView
         hide()
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         binding.dummyButton.setOnTouchListener(delayHideTouchListener)
 
-        val length = intent.getIntExtra("ShowWeatherLength",10)
-        val minutes = intent.getIntExtra("ShowWeatherHour",9)
-        val hour = intent.getIntExtra("ShowWeatherMinutes",20)
-        setAlarm(hour,minutes, length)
-        displayWeather(length)
+        val screen = intent.getIntExtra("ShowScreenLength",10)
+        val delay = intent.getIntExtra("ShowDelay",5)
+        setAlarm(screen, delay)
+        displayWeather(screen)
 
+        sleep(screen.toLong()*60*1000)
+
+        keyguardLock.reenableKeyguard();
         val handler = Handler()
-        handler.postDelayed({ finish() }, length.toLong()*60*1000)
+        handler.postDelayed({ finish() }, 1000)
     }
 
-    private fun setAlarm(hour: Int, minutes: Int, length: Int) {
-        //Set alarm for tomorrow
+    private fun setAlarm(screen: Int, delay: Int) {
+        //Set alarm for next time
         AlarmManager.RTC_WAKEUP
         val am= applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
-        //tomorrow morning
-        val tomorrowmorning = GregorianCalendar().apply {
-            add(Calendar.DATE, 1)
-            set(Calendar.HOUR_OF_DAY,hour)
-            set(Calendar.MINUTE, minutes)
+        val nexttime = GregorianCalendar().apply {
+            add(Calendar.MINUTE, (delay*-1))
+            add(Calendar.HOUR_OF_DAY,3)
+            set(Calendar.MINUTE, delay)
         }.timeInMillis
-
-        //set the intent
-//        val intent = Intent(applicationContext, WeatherActivity::class.java)
-//        intent.action = "com.example.weatherreport"
-//        intent.putExtra("ShowWeatherLength",length)
-//        intent.putExtra("ShowWeatherHour",hour)
-//        intent.putExtra("ShowWeatherMinutes",minutes)
-//        val pintent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         val intent = Intent(applicationContext, BroadCastReceiver::class.java)
         intent.action = "com.example.weatherreport"
-        intent.putExtra("ShowWeatherLength",length)
-        intent.putExtra("ShowWeatherHour",hour)
-        intent.putExtra("ShowWeatherMinutes",minutes)
+        intent.putExtra("ShowScreenLength",screen)
+        intent.putExtra("ShowDelay",delay)
         val pintent= PendingIntent.getBroadcast(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,tomorrowmorning, pintent)
+        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,nexttime, pintent)
         //am.setRepeating(AlarmManager.RTC_WAKEUP,tomorrowmorning,AlarmManager.INTERVAL_DAY, pintent)
     }
 
@@ -214,12 +205,6 @@ class WeatherActivity : AppCompatActivity() {
     private fun showWeatherData(data: DisplayData) {
         binding.outputText.isVisible=false //hide error output
 
-        when(data.todayWeatherType.main) {
-            "Rain"->weatherView.setWeatherData(PrecipType.RAIN)
-            "Snow"->weatherView.setWeatherData(PrecipType.SNOW)
-            "Clear"->weatherView.setWeatherData(PrecipType.CLEAR)
-            else->weatherView.visibility = View.INVISIBLE
-        }
         binding.dateofweather.text = data.todayWeatherDate.toDate("yyyy-MM-dd HH:mm:ss")
 
         val icon = when(data.todayWeatherType.icon.replace('n','d')) {
@@ -333,7 +318,7 @@ class WeatherActivity : AppCompatActivity() {
 
         val keyguardManager =
             applicationContext.getSystemService(KEYGUARD_SERVICE) as KeyguardManager
-        val keyguardLock = keyguardManager.newKeyguardLock("WeatherReport:unlockTAG")
+        keyguardLock = keyguardManager.newKeyguardLock("WeatherReport:unlockTAG")
         keyguardLock.disableKeyguard()
     }
 

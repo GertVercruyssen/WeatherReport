@@ -7,45 +7,40 @@
     android:theme="@style/ThemeOverlay.WeatherReport.FullscreenContainer"
     tools:context=".FullscreenActivity">
     <TextView
-        android:id="@+id/hourText"
+        android:id="@+id/delayText"
         android:layout_gravity="start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Time to show weather data: "
+        android:text="Time delay to show weather data: "
         android:textSize="20sp"
         android:textStyle="bold"
         android:padding="5dp"
         android:layout_alignParentTop="true"/>
-
-    <TimePicker
-        android:id="@+id/timepicker"
+    <NumberPicker
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/hourText"/>
+        android:id="@+id/delayvalue"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/delayText"/>
+
 
     <TextView
-        android:id="@+id/lengthText"
+        android:id="@+id/screenText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start"
         android:padding="5dp"
-        android:text="Length in minutes to stay on: "
+        android:text="time screen stays on: "
         android:textSize="20sp"
         android:textStyle="bold"
-        android:layout_below="@id/timepicker"/>
+        android:layout_below="@id/delayvalue"/>
     <NumberPicker
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/lengthvalue"
-        android:layout_below="@id/timepicker"
-        android:layout_toRightOf="@id/lengthText"/>
+        android:id="@+id/screenvalue"
+        android:layout_below="@id/delayvalue"
+        android:layout_toRightOf="@+id/screenText"/>
 
-    <Button
-        android:id="@+id/showButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Show"
-        android:layout_above="@id/okButton"/>
     <Button
         android:id="@+id/okButton"
         android:layout_width="match_parent"

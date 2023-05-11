@@ -6,14 +6,12 @@ import android.content.Intent
 class BroadCastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if(intent?.action == "com.example.weatherreport") {
-            val length = intent.getIntExtra("ShowWeatherLength",10)
-            val minutes = intent.getIntExtra("ShowWeatherHour",9)
-            val hour = intent.getIntExtra("ShowWeatherMinutes",20)
+            val screen = intent.getIntExtra("ShowScreenLength",10)
+            val delay = intent.getIntExtra("ShowDelay",5)
             val newintent =Intent(context,WeatherActivity::class.java)
             newintent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-            newintent.putExtra("ShowWeatherLength",length)
-            newintent.putExtra("ShowWeatherHour",hour)
-            newintent.putExtra("ShowWeatherMinutes",minutes)
+            newintent.putExtra("ShowScreenLength",screen)
+            newintent.putExtra("ShowDelay",delay)
             context?.startActivity(newintent)
         }
     }
