@@ -21,6 +21,8 @@ import java.lang.Thread.sleep
 import java.net.URL
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
+import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 
 sealed class Result<out R> {
@@ -156,11 +158,11 @@ class WeatherActivity : AppCompatActivity() {
         setAlarm(screen, delay)
         displayWeather(screen)
 
-        sleep(screen.toLong()*60*1000)
-
-        keyguardLock.reenableKeyguard();
-        val handler = Handler()
-        handler.postDelayed({ finish() }, 1000)
+        thread(start = true) {
+            sleep(screen.toLong()*60*1000);
+            keyguardLock.reenableKeyguard();
+            exitProcess(0);
+        }
     }
 
     override fun onResume() {
@@ -246,6 +248,7 @@ class WeatherActivity : AppCompatActivity() {
         binding.description.text = data.todayWeatherType.description
 
         binding.tempgraph.input = data.nextDays.map { it.main.temp }
+        binding.tempgraph.firsttimestamp = data.nextDays[0].dt
 
         binding.humid.text = "Humidity: "+ String.format("%.1f", data.todayHumid)+"%"
         binding.pressure.text = "Pressure: "+ String.format("%.1f", data.todayPressure)
