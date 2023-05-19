@@ -40,12 +40,41 @@
         android:id="@+id/screenvalue"
         android:layout_below="@id/delayvalue"
         android:layout_toRightOf="@+id/screenText"/>
+    <TextView
+        android:id="@+id/intervalText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:padding="5dp"
+        android:text="hours in between activation: "
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_below="@id/screenvalue"/>
+    <NumberPicker
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/intervalvalue"
+        android:layout_below="@id/screenvalue"
+        android:layout_toRightOf="@+id/intervalText"/>
 
+    <Button
+        android:id="@+id/showButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="show weather now"
+        android:layout_above="@+id/clearButton"/>
+
+    <Button
+        android:id="@+id/clearButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="clear all alerts"
+        android:layout_above="@+id/okButton"/>
     <Button
         android:id="@+id/okButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="OK"
+        android:text="save scheduled weather"
         android:layout_alignParentBottom="true"/>
 
 

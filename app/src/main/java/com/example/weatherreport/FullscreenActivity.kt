@@ -20,10 +20,13 @@ class FullscreenActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var sharedPref:SharedPreferences
+    private lateinit var alarmMgr: AlarmManager
+    private  var alarmIntent:  PendingIntent? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        alarmMgr = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         //get settings from sharedprefs
         sharedPref = getPreferences(Context.MODE_PRIVATE)
 
@@ -36,20 +39,74 @@ class FullscreenActivity : AppCompatActivity() {
         binding.delayvalue.minValue=0
         binding.delayvalue.maxValue=180
         binding.delayvalue.value = sharedPref.getInt("delay", 5)
+        binding.intervalvalue.minValue=1
+        binding.intervalvalue.maxValue=24
+        binding.intervalvalue.value = sharedPref.getInt("interval", 3)
 
         binding.okButton.setOnClickListener{
-            saveSettings(binding.screenvalue.value, binding.delayvalue.value)
+            saveSettings(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
+            alarmIntent = CreateWeatherPendingIntent(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
+
+            // Set the alarm to start now + delay
+            val calendar: Calendar = Calendar.getInstance().apply {
+                timeInMillis = System.currentTimeMillis()
+                add(Calendar.MINUTE, binding.delayvalue.value)
+            }
+
+            // setRepeating() lets you specify a precise custom interval--in this case, interval
+            //alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,calendar.timeInMillis,alarmIntent)
+            //alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC,calendar.timeInMillis,alarmIntent)
+            alarmMgr.setRepeating(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                1000 * 60 * 60 * binding.intervalvalue.value.toLong(),
+                alarmIntent
+            )
+
+            val convertedTime = (calendar.timeInMillis/1000).toDate()
+            MyLog.appendLog(LogLevel.Info, "Next time set: $convertedTime")
+        }
+
+        binding.clearButton.setOnClickListener {
+            saveSettings(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
+
+            if (alarmIntent != null) {
+                alarmMgr.cancel(alarmIntent)
+            } else {
+                val  pendingIntent = CreateWeatherPendingIntent(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
+                alarmMgr.cancel(pendingIntent)
+            }
+        }
+        binding.showButton.setOnClickListener {
+            saveSettings(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
             val intent = Intent(applicationContext, WeatherActivity::class.java)
-            intent.putExtra("ShowScreenLength",binding.screenvalue.value)
-            intent.putExtra("ShowDelay",binding.delayvalue.value)
+            intent.putExtra("length",binding.screenvalue.value)
+            intent.putExtra("delay",binding.delayvalue.value)
+            intent.putExtra("interval",binding.intervalvalue.value)
             this.startActivity(intent)
         }
     }
 
-    private fun saveSettings(screen: Int, delay: Int) {
+    private fun CreateWeatherPendingIntent(length: Int, delay: Int, interval: Int) : PendingIntent{
+        val intent = Intent(applicationContext, BroadCastReceiver::class.java)
+        intent.putExtra("length", length)
+        intent.putExtra("delay", delay)
+        intent.putExtra("interval", interval)
+        intent.action = "SHOW_WEATHER"
+
+        return PendingIntent.getBroadcast(
+            applicationContext,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    private fun saveSettings(screen: Int, delay: Int, interval:Int) {
         val editor = sharedPref.edit()
         editor.putInt("screen",screen)
         editor.putInt("delay",delay)
+        editor.putInt("interval",interval)
         editor.apply()
     }
 }

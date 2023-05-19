@@ -23,11 +23,11 @@ class SimpleGraph: View {
         paint.setColor(Color.LTGRAY)
         paint.alpha = 255
         paint.strokeWidth = 1.5f
-        var offset: Int = (firsttimestamp.toDate("HH").toInt())/4
+        var offset: Int = (firsttimestamp.toDate("HH").toInt())/3
         val distance = ((width-(spacing*2))/(input.size-1))
         for(i in 0 until input.size-1) {
-            if((i-offset)%8 == 0)
-            canvas?.drawLine(spacing+((i+0.5f)*distance),0f,spacing+((i+0.5f)*distance),height.toFloat(),paint)
+            if((i+offset)%8 == 0)
+                canvas?.drawLine(spacing+((i+0.5f)*distance),0f,spacing+((i+0.5f)*distance),height.toFloat(),paint)
         }
 
         val maxtemp = input.max()

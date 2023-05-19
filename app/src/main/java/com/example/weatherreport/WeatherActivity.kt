@@ -19,6 +19,7 @@ import kotlinx.coroutines.*
 import java.lang.Runnable
 import java.lang.Thread.sleep
 import java.net.URL
+import java.text.SimpleDateFormat
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
 import kotlin.concurrent.thread
@@ -86,6 +87,7 @@ class WeatherActivity : AppCompatActivity() {
     private lateinit var fullscreenContentControls: LinearLayout
     private var screen: Int = 10
     private var delay: Int = 5
+    private var interval: Int = 3
     private val hideHandler = Handler(Looper.myLooper()!!)
     //35.681765, 139.664546 thuis
     private val urldaily = "https://api.openweathermap.org/data/2.5/weather?lat=35.681&lon=139.664&appid=2ddcbe80f116f1a66b67526c132f6322&units=metric"
@@ -139,6 +141,8 @@ class WeatherActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        //TODO: enforce flip landscape
+        MyLog.appendLog(LogLevel.Info, "Startup WeatherActivity")
         binding = ActivityWeatherBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -153,9 +157,10 @@ class WeatherActivity : AppCompatActivity() {
         // while interacting with the UI.
         binding.dummyButton.setOnTouchListener(delayHideTouchListener)
 
-        screen = intent.getIntExtra("ShowScreenLength",10)
-        delay = intent.getIntExtra("ShowDelay",5)
-        setAlarm(screen, delay)
+        screen = intent.getIntExtra("length",10)
+        delay = intent.getIntExtra("delay",5)
+        interval = intent.getIntExtra("interval",3)
+        //setAlarm(screen, delay, interval)
         displayWeather(screen)
 
         thread(start = true) {
@@ -169,23 +174,28 @@ class WeatherActivity : AppCompatActivity() {
         super.onResume()
         displayWeather(screen)
     }
-    private fun setAlarm(screen: Int, delay: Int) {
+    private fun setAlarm(screen: Int, delay: Int, interval: Int) {
         //Set alarm for next time
         AlarmManager.RTC_WAKEUP
         val am= applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
-        val nexttime = GregorianCalendar().apply {
+        val calendar: Calendar = Calendar.getInstance().apply {
+            timeInMillis = System.currentTimeMillis()
             add(Calendar.MINUTE, (delay*-1))
-            add(Calendar.HOUR_OF_DAY,3)
+            add(Calendar.HOUR_OF_DAY,interval)
             set(Calendar.MINUTE, delay)
-        }.timeInMillis
+        }
 
         val intent = Intent(applicationContext, BroadCastReceiver::class.java)
         intent.action = "com.example.weatherreport"
-        intent.putExtra("ShowScreenLength",screen)
-        intent.putExtra("ShowDelay",delay)
-        val pintent= PendingIntent.getBroadcast(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        intent.putExtra("length",screen)
+        intent.putExtra("delay",delay)
+        intent.putExtra("interval",interval)
+        val pintent= PendingIntent.getBroadcast(this,0,intent,PendingIntent.FLAG_IMMUTABLE)
 
-        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,nexttime, pintent)
+        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,calendar.timeInMillis, pintent)
+
+        val convertedTime = (calendar.timeInMillis/1000).toDate()
+        MyLog.appendLog(LogLevel.Info, "Next time set: $convertedTime")
         //am.setRepeating(AlarmManager.RTC_WAKEUP,tomorrowmorning,AlarmManager.INTERVAL_DAY, pintent)
     }
 
