@@ -1,5 +1,6 @@
 package com.example.weatherreport
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -53,15 +54,16 @@ class FullscreenActivity : AppCompatActivity() {
                 add(Calendar.MINUTE, binding.delayvalue.value)
             }
 
-            // setRepeating() lets you specify a precise custom interval--in this case, interval
-            //alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,calendar.timeInMillis,alarmIntent)
+            alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,calendar.timeInMillis,alarmIntent)
             //alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC,calendar.timeInMillis,alarmIntent)
-            alarmMgr.setRepeating(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                1000 * 60 * 60 * binding.intervalvalue.value.toLong(),
-                alarmIntent
-            )
+            // setRepeating() lets you specify a precise custom interval--in this case, interval
+//            alarmMgr.setRepeating(
+//                AlarmManager.RTC_WAKEUP,
+//                calendar.timeInMillis,
+//                1000 * 60 * 10, //debug: every 10 mins
+////                1000 * 60 * 60 * binding.intervalvalue.value.toLong(),
+//                alarmIntent
+//            )
 
             val convertedTime = (calendar.timeInMillis/1000).toDate()
             MyLog.appendLog(LogLevel.Info, "Next time set: $convertedTime")
@@ -93,12 +95,7 @@ class FullscreenActivity : AppCompatActivity() {
         intent.putExtra("delay", delay)
         intent.putExtra("interval", interval)
         intent.action = "SHOW_WEATHER"
-
-        return PendingIntent.getBroadcast(
-            applicationContext,
-            0,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE
+        return PendingIntent.getBroadcast(applicationContext,0,intent,PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 

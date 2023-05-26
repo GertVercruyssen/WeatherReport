@@ -141,7 +141,7 @@ class WeatherActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //TODO: enforce flip landscape
+        //TODO: enforce flip landscape?
         MyLog.appendLog(LogLevel.Info, "Startup WeatherActivity")
         binding = ActivityWeatherBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -173,30 +173,6 @@ class WeatherActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         displayWeather(screen)
-    }
-    private fun setAlarm(screen: Int, delay: Int, interval: Int) {
-        //Set alarm for next time
-        AlarmManager.RTC_WAKEUP
-        val am= applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
-        val calendar: Calendar = Calendar.getInstance().apply {
-            timeInMillis = System.currentTimeMillis()
-            add(Calendar.MINUTE, (delay*-1))
-            add(Calendar.HOUR_OF_DAY,interval)
-            set(Calendar.MINUTE, delay)
-        }
-
-        val intent = Intent(applicationContext, BroadCastReceiver::class.java)
-        intent.action = "com.example.weatherreport"
-        intent.putExtra("length",screen)
-        intent.putExtra("delay",delay)
-        intent.putExtra("interval",interval)
-        val pintent= PendingIntent.getBroadcast(this,0,intent,PendingIntent.FLAG_IMMUTABLE)
-
-        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,calendar.timeInMillis, pintent)
-
-        val convertedTime = (calendar.timeInMillis/1000).toDate()
-        MyLog.appendLog(LogLevel.Info, "Next time set: $convertedTime")
-        //am.setRepeating(AlarmManager.RTC_WAKEUP,tomorrowmorning,AlarmManager.INTERVAL_DAY, pintent)
     }
 
     private fun displayWeather(length: Int) = runBlocking{
