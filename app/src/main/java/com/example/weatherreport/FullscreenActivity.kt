@@ -23,6 +23,7 @@ class FullscreenActivity : AppCompatActivity() {
     private lateinit var sharedPref:SharedPreferences
     private lateinit var alarmMgr: AlarmManager
     private  var alarmIntent:  PendingIntent? = null
+    private lateinit var currentSettings: Settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,76 +35,89 @@ class FullscreenActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.screenvalue.minValue=1
-        binding.screenvalue.maxValue=60
-        binding.screenvalue.value = sharedPref.getInt("screen", 10)
-        binding.delayvalue.minValue=0
-        binding.delayvalue.maxValue=180
-        binding.delayvalue.value = sharedPref.getInt("delay", 5)
-        binding.intervalvalue.minValue=1
-        binding.intervalvalue.maxValue=24
-        binding.intervalvalue.value = sharedPref.getInt("interval", 3)
+        val saved = sharedPref.getString("settings", "")
+        currentSettings = Settings(saved)
+
+        binding.checkBox.isChecked = currentSettings.repeat
+        binding.editTextNumber.setText(currentSettings.repeathours.toString())
+        binding.alarmtypeBox.isChecked = currentSettings.repeattype
+        binding.timeoutNumber.setText(currentSettings.length.toString())
+        binding.timeoutType1Box.isChecked = currentSettings.lengthscreen
+        binding.timeoutType2Box.isChecked = currentSettings.lengthlock
+        binding.timeoutType3Box.isChecked = currentSettings.lengthclose
+        binding.delayNumber.setText(currentSettings.delay.toString())
 
         binding.okButton.setOnClickListener{
-            saveSettings(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
-            alarmIntent = CreateWeatherPendingIntent(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
+
+            saveSettings()
+            alarmIntent = CreateWeatherPendingIntent()
 
             // Set the alarm to start now + delay
             val calendar: Calendar = Calendar.getInstance().apply {
                 timeInMillis = System.currentTimeMillis()
-                add(Calendar.MINUTE, binding.delayvalue.value)
+                if(currentSettings.delay == 0)
+                    add(Calendar.SECOND, 10)
+                else
+                    set(Calendar.MINUTE, currentSettings.delay)
             }
 
-            alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,calendar.timeInMillis,alarmIntent)
-            //alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC,calendar.timeInMillis,alarmIntent)
-            // setRepeating() lets you specify a precise custom interval--in this case, interval
-//            alarmMgr.setRepeating(
-//                AlarmManager.RTC_WAKEUP,
-//                calendar.timeInMillis,
-//                1000 * 60 * 10, //debug: every 10 mins
-////                1000 * 60 * 60 * binding.intervalvalue.value.toLong(),
-//                alarmIntent
-//            )
+            if(currentSettings.repeattype)
+                alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,calendar.timeInMillis,alarmIntent)
+            else {
+                // setRepeating() lets you specify a precise custom interval--in this case, interval
+                alarmMgr.setRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    1000 * 60 * 60 * currentSettings.repeathours.toLong(),
+                    alarmIntent
+                )
+            }
 
             val convertedTime = (calendar.timeInMillis/1000).toDate()
             MyLog.appendLog(LogLevel.Info, "Next time set: $convertedTime")
         }
 
         binding.clearButton.setOnClickListener {
-            saveSettings(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
+
+            saveSettings()
 
             if (alarmIntent != null) {
                 alarmMgr.cancel(alarmIntent)
             } else {
-                val  pendingIntent = CreateWeatherPendingIntent(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
+                val  pendingIntent = CreateWeatherPendingIntent()
                 alarmMgr.cancel(pendingIntent)
             }
         }
         binding.showButton.setOnClickListener {
-            saveSettings(binding.screenvalue.value, binding.delayvalue.value, binding.intervalvalue.value)
+
+            saveSettings()
+
             val intent = Intent(applicationContext, WeatherActivity::class.java)
-            intent.putExtra("length",binding.screenvalue.value)
-            intent.putExtra("delay",binding.delayvalue.value)
-            intent.putExtra("interval",binding.intervalvalue.value)
+            intent.putExtra("settings", currentSettings.toString())
             this.startActivity(intent)
         }
     }
 
-    private fun CreateWeatherPendingIntent(length: Int, delay: Int, interval: Int) : PendingIntent{
+    private fun CreateWeatherPendingIntent() : PendingIntent{
         val intent = Intent(applicationContext, BroadCastReceiver::class.java)
-        intent.putExtra("length", length)
-        intent.putExtra("delay", delay)
-        intent.putExtra("interval", interval)
+        intent.putExtra("settings", currentSettings.toString())
         intent.action = "SHOW_WEATHER"
         return PendingIntent.getBroadcast(applicationContext,0,intent,PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
-    private fun saveSettings(screen: Int, delay: Int, interval:Int) {
+    private fun saveSettings() {
+        currentSettings.repeat = binding.checkBox.isChecked
+        currentSettings.repeathours =  binding.editTextNumber.text.toString().toInt()
+        currentSettings.repeattype = binding.alarmtypeBox.isChecked
+        currentSettings.length = binding.timeoutNumber.text.toString().toInt()
+        currentSettings.lengthscreen = binding.timeoutType1Box.isChecked
+        currentSettings.lengthlock = binding.timeoutType2Box.isChecked
+        currentSettings.lengthclose = binding.timeoutType3Box.isChecked
+        currentSettings.delay = binding.delayNumber.text.toString().toInt()
+
         val editor = sharedPref.edit()
-        editor.putInt("screen",screen)
-        editor.putInt("delay",delay)
-        editor.putInt("interval",interval)
+        editor.putString("settings",currentSettings.toString())
         editor.apply()
     }
 }

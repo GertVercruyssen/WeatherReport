@@ -1,82 +1,289 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/relativeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:scrollbars="vertical"
-    android:background="?attr/fullscreenBackgroundColor"
+    android:background="#FFFFFF"
     android:theme="@style/ThemeOverlay.WeatherReport.FullscreenContainer"
     tools:context=".FullscreenActivity">
-    <TextView
-        android:id="@+id/delayText"
-        android:layout_gravity="start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Time delay to show weather data: "
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:padding="5dp"
-        android:layout_alignParentTop="true"/>
-    <NumberPicker
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/delayvalue"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/delayText"/>
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent">
 
-    <TextView
-        android:id="@+id/screenText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="start"
-        android:padding="5dp"
-        android:text="time screen stays on: "
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_below="@id/delayvalue"/>
-    <NumberPicker
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/screenvalue"
-        android:layout_below="@id/delayvalue"
-        android:layout_toRightOf="@+id/screenText"/>
-    <TextView
-        android:id="@+id/intervalText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="start"
-        android:padding="5dp"
-        android:text="hours in between activation: "
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_below="@id/screenvalue"/>
-    <NumberPicker
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/intervalvalue"
-        android:layout_below="@id/screenvalue"
-        android:layout_toRightOf="@+id/intervalText"/>
+            <TextView
+                android:id="@+id/repeatText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="Repeating alarm "
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
+            <CheckBox
+                android:id="@+id/checkBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                app:layout_constraintBottom_toBottomOf="@+id/repeatText"
+                app:layout_constraintLeft_toRightOf="@+id/repeatText"
+                app:layout_constraintTop_toTopOf="@+id/repeatText" />
+
+            <TextView
+                android:id="@+id/intervalText1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="Every "
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/repeatText" />
+
+            <EditText
+                android:id="@+id/editTextNumber"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/black"
+                android:textColor="@color/black"
+                android:ems="10"
+                android:inputType="number"
+                app:layout_constraintBottom_toBottomOf="@+id/intervalText1"
+                app:layout_constraintLeft_toRightOf="@+id/intervalText1"
+                app:layout_constraintTop_toTopOf="@+id/intervalText1" />
+
+            <TextView
+                android:id="@+id/intervalText2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="hours."
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@+id/editTextNumber"
+                app:layout_constraintLeft_toRightOf="@+id/editTextNumber"
+                app:layout_constraintTop_toTopOf="@+id/editTextNumber" />
+
+            <TextView
+                android:id="@+id/alarmtypeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="(Recreating alarms )"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/intervalText1" />
+
+            <CheckBox
+                android:id="@+id/alarmtypeBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                app:layout_constraintBottom_toBottomOf="@+id/alarmtypeText"
+                app:layout_constraintLeft_toRightOf="@+id/alarmtypeText"
+                app:layout_constraintTop_toTopOf="@+id/alarmtypeText" />
+
+            <TextView
+                android:id="@+id/timeoutText1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_marginTop="24dp"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="After "
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/alarmtypeText" />
+
+            <EditText
+                android:id="@+id/timeoutNumber"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:backgroundTint="@color/black"
+                android:textColor="@color/black"
+                android:inputType="number"
+                app:layout_constraintBottom_toBottomOf="@+id/timeoutText1"
+                app:layout_constraintLeft_toRightOf="@+id/timeoutText1"
+                app:layout_constraintTop_toTopOf="@+id/timeoutText1" />
+
+            <TextView
+                android:id="@+id/timeoutText2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text=" minutes."
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@+id/timeoutNumber"
+                app:layout_constraintLeft_toRightOf="@+id/timeoutNumber"
+                app:layout_constraintTop_toTopOf="@+id/timeoutNumber" />
+
+            <TextView
+                android:id="@+id/timeoutType1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="Shut down screen"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/timeoutText1" />
+
+            <CheckBox
+                android:id="@+id/timeoutType1Box"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                app:layout_constraintBottom_toBottomOf="@+id/timeoutType1"
+                app:layout_constraintLeft_toRightOf="@+id/timeoutType1"
+                app:layout_constraintTop_toTopOf="@+id/timeoutType1" />
+
+            <TextView
+                android:id="@+id/timeoutType2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="Lock screen"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/timeoutType1" />
+
+            <CheckBox
+                android:id="@+id/timeoutType2Box"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                app:layout_constraintBottom_toBottomOf="@+id/timeoutType2"
+                app:layout_constraintLeft_toRightOf="@+id/timeoutType2"
+                app:layout_constraintTop_toTopOf="@+id/timeoutType2" />
+
+            <TextView
+                android:id="@+id/timeoutType3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="Close app"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/timeoutType2" />
+
+            <CheckBox
+                android:id="@+id/timeoutType3Box"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                app:layout_constraintBottom_toBottomOf="@+id/timeoutType3"
+                app:layout_constraintLeft_toRightOf="@+id/timeoutType3"
+                app:layout_constraintTop_toTopOf="@+id/timeoutType3" />
+
+            <TextView
+                android:id="@+id/delayText1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_marginTop="24dp"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="Start at "
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/timeoutType3" />
+
+            <EditText
+                android:id="@+id/delayNumber"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="number"
+                android:backgroundTint="@color/black"
+                android:textColor="@color/black"
+                app:layout_constraintBottom_toBottomOf="@+id/delayText1"
+                app:layout_constraintLeft_toRightOf="@+id/delayText1"
+                app:layout_constraintTop_toTopOf="@+id/delayText1" />
+
+            <TextView
+                android:id="@+id/delayText2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="minutes on the hour."
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@+id/delayNumber"
+                app:layout_constraintLeft_toRightOf="@+id/delayNumber"
+                app:layout_constraintTop_toTopOf="@+id/delayNumber" />
+            <TextView
+                android:id="@+id/infoText1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:padding="5dp"
+                android:textColor="@color/black"
+                android:text="(if 0 start in 10 sec.)"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/delayText1" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
     <Button
         android:id="@+id/showButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
         android:text="show weather now"
-        android:layout_above="@+id/clearButton"/>
+        app:layout_constraintBottom_toTopOf="@+id/clearButton"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/clearButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="clear all alerts"
-        android:layout_above="@+id/okButton"/>
+        android:layout_marginHorizontal="20dp"
+        android:text="clear alert"
+        app:layout_constraintBottom_toTopOf="@+id/okButton"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <Button
         android:id="@+id/okButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="save scheduled weather"
-        android:layout_alignParentBottom="true"/>
+        android:layout_marginHorizontal="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

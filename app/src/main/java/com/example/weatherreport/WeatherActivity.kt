@@ -6,6 +6,7 @@ import android.app.KeyguardManager
 import android.app.KeyguardManager.KeyguardLock
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.*
 import android.view.*
 import android.widget.LinearLayout
@@ -85,9 +86,7 @@ class WeatherActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWeatherBinding
     private lateinit var fullscreenContent: ConstraintLayout
     private lateinit var fullscreenContentControls: LinearLayout
-    private var screen: Int = 10
-    private var delay: Int = 5
-    private var interval: Int = 3
+    private lateinit var settings: Settings
     private val hideHandler = Handler(Looper.myLooper()!!)
     //35.681765, 139.664546 thuis
     private val urldaily = "https://api.openweathermap.org/data/2.5/weather?lat=35.681&lon=139.664&appid=2ddcbe80f116f1a66b67526c132f6322&units=metric"
@@ -141,7 +140,6 @@ class WeatherActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //TODO: enforce flip landscape?
         MyLog.appendLog(LogLevel.Info, "Startup WeatherActivity")
         binding = ActivityWeatherBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -157,28 +155,35 @@ class WeatherActivity : AppCompatActivity() {
         // while interacting with the UI.
         binding.dummyButton.setOnTouchListener(delayHideTouchListener)
 
-        screen = intent.getIntExtra("length",10)
-        delay = intent.getIntExtra("delay",5)
-        interval = intent.getIntExtra("interval",3)
-        //setAlarm(screen, delay, interval)
-        displayWeather(screen)
+        settings = Settings(intent.getStringExtra("settings"))
+        displayWeather()
 
         thread(start = true) {
-            sleep(screen.toLong()*60*1000);
-            keyguardLock.reenableKeyguard();
-            exitProcess(0);
+            sleep(settings.length.toLong()*60*1000);
+            if(settings.lengthscreen) {
+                val pm = applicationContext.getSystemService(POWER_SERVICE) as PowerManager
+                val mWakeLock = pm.newWakeLock(
+                    PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                    "WeatherReport:screenoffTAG"
+                );
+                mWakeLock.acquire();
+            }
+            if(settings.lengthlock)
+                keyguardLock.reenableKeyguard();
+            if(settings.lengthclose)
+                exitProcess(0);
         }
     }
 
     override fun onResume() {
         super.onResume()
-        displayWeather(screen)
+        displayWeather()
     }
 
-    private fun displayWeather(length: Int) = runBlocking{
+    private fun displayWeather() = runBlocking{
         val job = async { getWeatherData() }
 
-        wakeUpAndUnlock(length)
+        wakeUpAndUnlock(settings.length)
 
         val result = job.await()
 
@@ -302,19 +307,21 @@ class WeatherActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
+
         //wake up the screen
-        //WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         val pm = applicationContext.getSystemService(POWER_SERVICE) as PowerManager
         val wakeLock = pm.newWakeLock(
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
             "WeatherReport:wakeTAG"
         )
-        wakeLock.acquire(length * 60 * 1000L /*1 minutes*/)
+        wakeLock.acquire((length+1) * 60 * 1000L /*1 minutes*/)
 
         val keyguardManager =
             applicationContext.getSystemService(KEYGUARD_SERVICE) as KeyguardManager
         keyguardLock = keyguardManager.newKeyguardLock("WeatherReport:unlockTAG")
         keyguardLock.disableKeyguard()
+
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
