@@ -257,33 +257,35 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/delayText1" />
 
+            <Button
+                android:id="@+id/showButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="24dp"
+                android:text="show weather now"
+                app:layout_constraintTop_toBottomOf="@id/infoText1"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <Button
+                android:id="@+id/clearButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:text="clear alert"
+                app:layout_constraintTop_toBottomOf="@id/showButton"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <Button
+                android:id="@+id/okButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="save scheduled weather"
+                android:layout_marginHorizontal="20dp"
+                app:layout_constraintTop_toBottomOf="@id/clearButton"
+                app:layout_constraintStart_toStartOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
-    <Button
-        android:id="@+id/showButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="20dp"
-        android:text="show weather now"
-        app:layout_constraintBottom_toTopOf="@+id/clearButton"
-        app:layout_constraintStart_toStartOf="parent" />
 
-    <Button
-        android:id="@+id/clearButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="20dp"
-        android:text="clear alert"
-        app:layout_constraintBottom_toTopOf="@+id/okButton"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/okButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="save scheduled weather"
-        android:layout_marginHorizontal="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

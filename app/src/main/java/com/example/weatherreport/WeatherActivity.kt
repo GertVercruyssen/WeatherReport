@@ -7,7 +7,9 @@ import android.app.KeyguardManager.KeyguardLock
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.media.MediaPlayer
 import android.os.*
+import android.os.PowerManager.WakeLock
 import android.view.*
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -83,11 +85,15 @@ fun Long.toDate(format: String = "yyyy-MM-dd HH:mm:ss"): String {
 class WeatherActivity : AppCompatActivity() {
 
     private lateinit var keyguardLock: KeyguardLock
+    private var wakeLock: WakeLock? = null
     private lateinit var binding: ActivityWeatherBinding
     private lateinit var fullscreenContent: ConstraintLayout
     private lateinit var fullscreenContentControls: LinearLayout
     private lateinit var settings: Settings
     private val hideHandler = Handler(Looper.myLooper()!!)
+    private var playingNoise = false
+    private var media: MediaPlayer? = null
+
     //35.681765, 139.664546 thuis
     private val urldaily = "https://api.openweathermap.org/data/2.5/weather?lat=35.681&lon=139.664&appid=2ddcbe80f116f1a66b67526c132f6322&units=metric"
     private val url5days = "https://api.openweathermap.org/data/2.5/forecast?lat=35.681&lon=139.664&appid=2ddcbe80f116f1a66b67526c132f6322&units=metric"
@@ -129,7 +135,7 @@ class WeatherActivity : AppCompatActivity() {
             MotionEvent.ACTION_DOWN -> if (AUTO_HIDE) {
                 delayedHide(AUTO_HIDE_DELAY_MILLIS)
             }
-            MotionEvent.ACTION_UP -> view.performClick()
+            //MotionEvent.ACTION_UP -> view.performClick()
             else -> {
             }
         }
@@ -153,31 +159,50 @@ class WeatherActivity : AppCompatActivity() {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
+        media = MediaPlayer.create(applicationContext,R.raw.noise)
+        media?.isLooping = true
         binding.dummyButton.setOnTouchListener(delayHideTouchListener)
+        binding.dummyButton.setOnClickListener {
+            if(playingNoise) {
+                media?.pause()
+            } else {
+                media?.start()
+            }
+            playingNoise = !playingNoise
+
+        }
 
         settings = Settings(intent.getStringExtra("settings"))
         displayWeather()
+        autoTurnOff()
+    }
 
-        thread(start = true) {
-            sleep(settings.length.toLong()*60*1000);
-            if(settings.lengthscreen) {
-                val pm = applicationContext.getSystemService(POWER_SERVICE) as PowerManager
-                val mWakeLock = pm.newWakeLock(
-                    PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
-                    "WeatherReport:screenoffTAG"
-                );
-                mWakeLock.acquire();
-            }
-            if(settings.lengthlock)
-                keyguardLock.reenableKeyguard();
-            if(settings.lengthclose)
-                exitProcess(0);
-        }
+    private fun autoTurnOff() {
+        if (settings.lengthscreen)
+            wakeLock?.release()
+//        thread(start = true) {
+//            sleep(settings.length.toLong() * 60 * 1000);
+//            if (settings.lengthscreen) {
+//                if (wakeLock == null) {
+//                    val pm = applicationContext.getSystemService(POWER_SERVICE) as PowerManager
+//                    val wakeLock = pm.newWakeLock(
+//                        PowerManager.PARTIAL_WAKE_LOCK,
+//                        "WeatherReport:screenoffTAG"
+//                    )
+//                }
+//                wakeLock?.release()
+//            }
+//            if (settings.lengthlock)
+//                keyguardLock.reenableKeyguard();
+//            if (settings.lengthclose)
+//                exitProcess(0);
+//        }
     }
 
     override fun onResume() {
         super.onResume()
         displayWeather()
+        autoTurnOff()
     }
 
     private fun displayWeather() = runBlocking{
@@ -296,25 +321,19 @@ class WeatherActivity : AppCompatActivity() {
     }
 
     private fun wakeUpAndUnlock(length: Int) {
-
-        //copy-pasted from stock android alarm
-        val win: Window = window
-        win.addFlags(
+        window.addFlags(
             WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
-        )
-        win.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON )
+//        window.addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON  )
 
         //wake up the screen
         val pm = applicationContext.getSystemService(POWER_SERVICE) as PowerManager
-        val wakeLock = pm.newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+        wakeLock = pm.newWakeLock(
+            PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
             "WeatherReport:wakeTAG"
         )
-        wakeLock.acquire((length+1) * 60 * 1000L /*1 minutes*/)
+        wakeLock?.acquire((length+1) * 60 * 1000L )
 
         val keyguardManager =
             applicationContext.getSystemService(KEYGUARD_SERVICE) as KeyguardManager

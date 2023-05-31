@@ -165,7 +165,7 @@
             style="@style/Widget.Theme.WeatherReport.ButtonBar.Fullscreen"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
+            android:layout_gravity="center_vertical|center_horizontal"
             android:orientation="horizontal"
             tools:ignore="UselessParent">
 
@@ -175,7 +175,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="A button placeholder" />
+                android:text="NOISE" />
 
         </LinearLayout>
     </FrameLayout>
