@@ -159,7 +159,7 @@ class WeatherActivity : AppCompatActivity() {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        media = MediaPlayer.create(applicationContext,R.raw.noise)
+        media = MediaPlayer.create(applicationContext,R.raw.betternoise)
         media?.isLooping = true
         binding.dummyButton.setOnTouchListener(delayHideTouchListener)
         binding.dummyButton.setOnClickListener {
